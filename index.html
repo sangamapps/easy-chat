@@ -10,7 +10,12 @@
 
 <body>
     <div id="container"></div>
-    <script src="dist/main.js"></script>
 </body>
+<script>
+    if (!location.hash.includes('#')) {
+        location.hash = '#/';
+    }
+</script>
+<script src="dist/main.js"></script>
 
 </html>

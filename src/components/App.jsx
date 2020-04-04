@@ -9,11 +9,12 @@ import 'react-toastify/dist/ReactToastify.css';
 class App extends Component {
   constructor() {
     super();
+    this.baseName = '/#';
   }
 
   render() {
     return (
-      <Router basename="/#">
+      <Router basename={this.baseName}>
         <ToastContainer />
         <Header />
         <Body />
