@@ -9,7 +9,7 @@ import 'react-toastify/dist/ReactToastify.css';
 class App extends Component {
   constructor() {
     super();
-    this.baseName = '/#';
+    this.baseName = location.pathname + '#';
   }
 
   render() {
