@@ -1,0 +1,14 @@
+{
+    "name": "Easy Chat",
+    "start_url": "/",
+    "display": "standalone",
+    "orientation": "portrait-primary",
+    "description": "Chat App.",
+    "icons": [
+        {
+            "src": "/assets/images/favicon.png",
+            "type": "image/png",
+            "sizes": "192x192"
+        }
+    ]
+}
