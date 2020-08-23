@@ -4,18 +4,14 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width,initial-scale=1">
-    <title>React Sample</title>
+    <title>Easy Chat</title>
     <link rel="shortcut icon" type="image/png" href="assets/images/favicon.png" />
+    <meta name="user-info" content='<%- JSON.stringify(userInfo) %>' />
 </head>
 
 <body>
     <div id="container"></div>
 </body>
-<script>
-    if (!location.hash.includes('#')) {
-        location.hash = '#/';
-    }
-</script>
-<script src="dist/main.js"></script>
+<script src="assets/js/bundle/main.js"></script>
 
 </html>

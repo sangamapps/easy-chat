@@ -1,1 +1,1 @@
-# react-sample
+# easy-chat
