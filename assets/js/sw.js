@@ -1,4 +1,4 @@
-const staticCacheName = 'site-static-v1';
+const staticCacheName = 'site-static-v2';
 const assets = [
   /** JS files */
   '/assets/js/main.js',

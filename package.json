@@ -39,6 +39,7 @@
     "@fortawesome/react-fontawesome": "^0.1.9",
     "axios": "^0.19.2",
     "bootstrap": "^4.4.1",
+    "crypto-js": "^4.0.0",
     "jquery": "^3.5.1",
     "lodash": "^4.17.20",
     "lz-string": "^1.4.4",
