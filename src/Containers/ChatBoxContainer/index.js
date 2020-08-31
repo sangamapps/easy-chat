@@ -4,7 +4,8 @@ import { connect } from 'react-redux';
 import socketIOClient from "socket.io-client";
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import LZString from 'lz-string';
-import CryptoJS from 'crypto-js';
+import AES from 'crypto-js/aes';
+import enc_utf8 from 'crypto-js/enc-utf8';
 import { toast } from "react-toastify";
 import 'styles/chatbox.scss';
 import Request from 'Model/Request';
@@ -136,7 +137,7 @@ class ChatBoxContainer extends React.PureComponent {
         const reader = new FileReader();
         reader.addEventListener('load', (event) => {
             const text = event.target.result;
-            const etext = CryptoJS.AES.encrypt(text, $("#img-upload-password").val()).toString();
+            const etext = AES.encrypt(text, $("#img-upload-password").val()).toString();
             const content = LZString.compressToUTF16(etext);
             Request.post("user/message", { type: 1, file: { content, name: file.name } }).then(resp => {
                 this.setState({ isUploading: false });
@@ -183,7 +184,7 @@ class ChatBoxContainer extends React.PureComponent {
         }
         let text;
         try {
-            text = CryptoJS.AES.decrypt(content, $("#img-download-password").val()).toString(CryptoJS.enc.Utf8);
+            text = AES.decrypt(content, $("#img-download-password").val()).toString(enc_utf8);
         } catch (e) {
             return toast.error("Invalid password");
         }
