@@ -22,7 +22,19 @@ class ChatBoxContainer extends React.PureComponent {
             emojisTabShowFlag: false,
             uploadModalShowFlag: false,
             downloadModalShowFlag: false,
-            isUploading: false,
+            uploadStatus: null,
+            downloadStatus: null,
+        };
+        this.uploadStatuses = {
+            READING: "READING",
+            ENCRYPTING: "ENCRYPTING",
+            COMPRESSING: "COMPRESSING",
+            UPLOADING: "UPLOADING",
+        };
+        this.downloadStatuses = {
+            DOWNLOADING: "DOWNLOADING",
+            DECRYPTING: "DECRYPTING",
+            DECOMPRESSING: "DECOMPRESSING",
         };
         this.downloadMessage = null;
         this.me = this.props.userInfo;
@@ -132,22 +144,35 @@ class ChatBoxContainer extends React.PureComponent {
 
     uploadImg = (e) => {
         e.preventDefault();
-        this.setState({ isUploading: true });
+        this.setState({ uploadStatus: this.uploadStatuses.READING });
         const file = document.getElementById("upload-img").files[0];
         const reader = new FileReader();
         reader.addEventListener('load', (event) => {
             const text = event.target.result;
+            this.setState({ uploadStatus: this.uploadStatuses.ENCRYPTING });
             const etext = AES.encrypt(text, $("#img-upload-password").val()).toString();
+            this.setState({ uploadStatus: this.uploadStatuses.COMPRESSING });
             const content = LZString.compressToUTF16(etext);
+            this.setState({ uploadStatus: this.uploadStatuses.UPLOADING });
             Request.post("user/message", { type: 1, file: { content, name: file.name } }).then(resp => {
-                this.setState({ isUploading: false });
+                this.setState({ uploadStatus: null });
                 this.toggleUploadModalShowFlag();
             }).catch(error => {
-                this.setState({ isUploading: false });
+                this.setState({ uploadStatus: null });
                 toast.error(error.message)
             });
         });
         reader.readAsDataURL(file);
+    }
+
+    getUploadStatus() {
+        switch (this.state.uploadStatus) {
+            case this.uploadStatuses.READING: return "Reading file content. Please wait..";
+            case this.uploadStatuses.ENCRYPTING: return "Encryting content. Please wait..";
+            case this.uploadStatuses.COMPRESSING: return "Compressing content. Please wait..";
+            case this.uploadStatuses.UPLOADING: return "Uploading content. Please wait..";
+            default: return "";
+        }
     }
 
     getUploadModalBody() {
@@ -155,7 +180,7 @@ class ChatBoxContainer extends React.PureComponent {
             <div><input id="upload-img" type="file" accept="image/*" required /></div>
             <label htmlFor="img-upload-password">Password</label>
             <div><input type="password" id="img-upload-password" required /></div>
-            {this.state.isUploading && <div>Uploading please wait...</div>}
+            <div>{this.getUploadStatus()}</div>
             <div className="d-flex">
                 <button className="sg-btn m-auto" type="submit">Upload</button>
             </div>
@@ -176,31 +201,48 @@ class ChatBoxContainer extends React.PureComponent {
         if (!content) {
             const { _id } = this.downloadMessage;
             try {
+                this.setState({ downloadStatus: this.downloadStatuses.DOWNLOADING });
                 const resp = await Request.get(`user/message/${this.downloadMessage._id}`);
+                this.setState({ downloadStatus: this.downloadStatuses.DECOMPRESSING });
                 content = this.downloadMessage.file.content = LZString.decompressFromUTF16(resp.file.content);
             } catch (e) {
+                this.setState({ downloadStatus: null });
                 return toast.error(e.message);
             }
         }
         let text;
         try {
+            this.setState({ downloadStatus: this.downloadStatuses.DECRYPTING });
             text = AES.decrypt(content, $("#img-download-password").val()).toString(enc_utf8);
         } catch (e) {
+            this.setState({ downloadStatus: null });
             return toast.error("Invalid password");
         }
+        this.setState({ downloadStatus: null });
         var element = document.createElement('a');
         element.setAttribute('href', text);
         element.setAttribute('download', this.downloadMessage.file.name);
         element.style.display = 'none';
         document.body.appendChild(element);
         element.click();
-        document.body.removeChild(element);
+        // document.body.removeChild(element);
+        this.toggleDownloadModalShowFlag();
+    }
+
+    getDownloadStatus() {
+        switch (this.state.downloadStatus) {
+            case this.downloadStatuses.DOWNLOADING: return "Downloading content. Please wait..";
+            case this.downloadStatuses.DECRYPTING: return "Decryting content. Please wait..";
+            case this.downloadStatuses.DECOMPRESSING: return "Decompressing content. Please wait..";
+            default: return "";
+        }
     }
 
     getDownloadModalBody() {
         return <form onSubmit={this.downloadImg}>
             <label htmlFor="img-download-password">Password</label>
             <div><input type="password" id="img-download-password" required autoFocus /></div>
+            <div>{this.getDownloadStatus()}</div>
             <div className="d-flex">
                 <button className="sg-btn m-auto" type="submit">Download</button>
             </div>
