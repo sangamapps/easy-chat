@@ -177,7 +177,7 @@ class ChatBoxContainer extends React.PureComponent {
 
     getUploadModalBody() {
         return <form onSubmit={this.uploadImg}>
-            <div><input id="upload-img" type="file" accept="image/*" required /></div>
+            <div><input id="upload-img" type="file" required /></div>
             <label htmlFor="img-upload-password">Password</label>
             <div><input type="password" id="img-upload-password" required /></div>
             <div>{this.getUploadStatus()}</div>
