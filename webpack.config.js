@@ -11,7 +11,7 @@ module.exports = {
         rules: [
             {
                 test: /\.jsx?$/,
-                exclude: /node_modules/,
+                include: path.resolve(__dirname, 'src'),
                 loader: "babel-loader",
                 query: {
                     presets: ['es2015', 'react'],
