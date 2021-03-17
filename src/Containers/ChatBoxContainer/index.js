@@ -167,7 +167,7 @@ class ChatBoxContainer extends React.PureComponent {
         this.setState({ uploadStatus: this.uploadStatuses.READING });
         const files = document.getElementById("upload-img").files;
         for (let i = 0; i < files.length; i++) {
-            this.uploadImg(files[0]);
+            this.uploadImg(files[i]);
         }
     }
 
