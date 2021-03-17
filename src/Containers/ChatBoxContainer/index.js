@@ -142,10 +142,7 @@ class ChatBoxContainer extends React.PureComponent {
         this.setState({ downloadModalShowFlag: !this.state.downloadModalShowFlag });
     }
 
-    uploadImg = (e) => {
-        e.preventDefault();
-        this.setState({ uploadStatus: this.uploadStatuses.READING });
-        const file = document.getElementById("upload-img").files[0];
+    uploadImg = (file) => {
         const reader = new FileReader();
         reader.addEventListener('load', (event) => {
             const text = event.target.result;
@@ -165,6 +162,15 @@ class ChatBoxContainer extends React.PureComponent {
         reader.readAsDataURL(file);
     }
 
+    uploadImgs = (e) => {
+        e.preventDefault();
+        this.setState({ uploadStatus: this.uploadStatuses.READING });
+        const files = document.getElementById("upload-img").files;
+        for (let i = 0; i < files.length; i++) {
+            this.uploadImg(files[0]);
+        }
+    }
+
     getUploadStatus() {
         switch (this.state.uploadStatus) {
             case this.uploadStatuses.READING: return "Reading file content. Please wait..";
@@ -176,8 +182,8 @@ class ChatBoxContainer extends React.PureComponent {
     }
 
     getUploadModalBody() {
-        return <form onSubmit={this.uploadImg}>
-            <div><input id="upload-img" type="file" required /></div>
+        return <form onSubmit={this.uploadImgs}>
+            <div><input id="upload-img" type="file" required multiple /></div>
             <label htmlFor="img-upload-password">Password</label>
             <div><input type="password" id="img-upload-password" required /></div>
             <div>{this.getUploadStatus()}</div>
