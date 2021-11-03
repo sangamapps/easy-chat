@@ -27,6 +27,7 @@ module.exports = {
             },
         ]
     },
+    devtool: 'source-map',
     resolve: {
         alias: {
             Containers: path.resolve(__dirname, 'src/Containers/'),

@@ -6,8 +6,10 @@
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
     "start": "webpack -d --watch",
-    "build": "webpack -p",
-    "serve": "python -m SimpleHTTPServer"
+    "dev": "webpack -d && npm run push",
+    "build": "webpack -p && npm run push",
+    "push": "cp -r ./assets/* ../easy-chat-backend/assets",
+    "serve": "python3 -m http.server"
   },
   "keywords": [],
   "author": "Sangameswaran A",

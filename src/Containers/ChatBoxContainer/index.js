@@ -11,6 +11,7 @@ import 'styles/chatbox.scss';
 import Request from 'Model/Request';
 import EmojisTab from './EmojisTab.jsx';
 import AbstractModal from 'Containers/Modals/AbstractModal.jsx';
+import { Link } from "react-router-dom";
 
 class ChatBoxContainer extends React.PureComponent {
 
@@ -38,6 +39,7 @@ class ChatBoxContainer extends React.PureComponent {
         };
         this.downloadMessage = null;
         this.me = this.props.userInfo;
+        this.collection = _.join(_.sortBy([this.me._id, this.props.match.params._id]), "-");
         this.socket = socketIOClient();
         this.downloadImg = this.downloadImg.bind(this);
     }
@@ -101,7 +103,7 @@ class ChatBoxContainer extends React.PureComponent {
         e.preventDefault();
         let text = this.state.text.trim();
         if (text.length == 0) return;
-        Request.post("user/message", { text, type: 0 }).catch(error => toast.error(error.message));
+        Request.post(`/user/message/${this.collection}`, { text, type: 0 }).catch(error => toast.error(error.message));
     }
 
     getEmojisTab() {
@@ -131,7 +133,7 @@ class ChatBoxContainer extends React.PureComponent {
     }
 
     logout() {
-        Request.delete('user/logout').then(resp => location.reload());
+        Request.delete('/user/logout').then(resp => location.reload());
     }
 
     toggleUploadModalShowFlag = () => {
@@ -151,7 +153,7 @@ class ChatBoxContainer extends React.PureComponent {
             this.setState({ uploadStatus: this.uploadStatuses.COMPRESSING });
             const content = LZString.compressToUTF16(etext);
             this.setState({ uploadStatus: this.uploadStatuses.UPLOADING });
-            Request.post("user/message", { type: 1, file: { content, name: file.name } }).then(resp => {
+            Request.post(`/user/message/${this.collection}`, { type: 1, file: { content, name: file.name } }).then(resp => {
                 this.setState({ uploadStatus: null });
                 this.toggleUploadModalShowFlag();
             }).catch(error => {
@@ -208,7 +210,7 @@ class ChatBoxContainer extends React.PureComponent {
             const { _id } = this.downloadMessage;
             try {
                 this.setState({ downloadStatus: this.downloadStatuses.DOWNLOADING });
-                const resp = await Request.get(`user/message/${this.downloadMessage._id}`);
+                const resp = await Request.get(`/user/message/${this.collection}/${this.downloadMessage._id}`);
                 this.setState({ downloadStatus: this.downloadStatuses.DECOMPRESSING });
                 content = this.downloadMessage.file.content = LZString.decompressFromUTF16(resp.file.content);
             } catch (e) {
@@ -268,8 +270,12 @@ class ChatBoxContainer extends React.PureComponent {
             {this.getUploadModal()}
             {this.getDownloadModal()}
             <div className="chatbox-header sg-bg-primary">
+                <Link className="sg-btn" to="/">Back</Link>
                 <span className="chatbox-title">Messages</span>
-                <button className="sg-btn" onClick={this.logout}>Logout</button>
+                <div>
+                    {/* {["itsrose", "itssan"].indexOf(this.me._id) > -1 && <a href="https://chime.aws/8198490751" target="_blank" className="sg-btn mr-5">Call</a>} */}
+                    <button className="sg-btn" onClick={this.logout}>Logout</button>
+                </div>
             </div>
             <div className="chatbox-body">
                 {this.getMessages()}
@@ -281,20 +287,22 @@ class ChatBoxContainer extends React.PureComponent {
         </div>;
     }
 
-    scrollToBottom() {
+    scrollToBottom = () => {
         var scroll = $('.chatbox-body');
         scroll.animate({ scrollTop: scroll.prop("scrollHeight") }, 500);
     }
 
-    fetchMessages() {
-        Request.get(`user/messages`)
-            .then(messages => this.setState({ messages }));
+    fetchMessages = () => {
+        Request.get(`/user/messages/${this.collection}`).then(this.afterFetchMessages);
+    }
+
+    afterFetchMessages = (messages) => {
+        this.setState({ messages }, () => this.scrollToBottom());
     }
 
     componentDidMount() {
-        this.scrollToBottom();
         this.fetchMessages();
-        this.socket.on('EC_NEW_MESSAGE', this.pushMessage);
+        this.socket.on(this.collection, this.pushMessage);
     }
 }
 
