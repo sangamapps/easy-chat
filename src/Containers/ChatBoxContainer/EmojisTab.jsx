@@ -6,7 +6,7 @@ const emojisMap = require('./emojis-map.json');
 export default class EmojisTab extends React.PureComponent {
 
     getEmoji = (map, key) => {
-        const emoji = map.emoji.substr(0, 2)
+        const emoji = map.emoji.substr(0, map.emoji.length);
         return <button key={key}
             onClick={() => this.props.onClick(emoji)}
             className="emoji">{emoji}</button>;

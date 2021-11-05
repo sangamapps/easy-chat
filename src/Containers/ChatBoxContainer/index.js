@@ -19,7 +19,6 @@ class ChatBoxContainer extends React.PureComponent {
         super(props);
         this.state = {
             messages: [],
-            text: '',
             emojisTabShowFlag: false,
             uploadModalShowFlag: false,
             downloadModalShowFlag: false,
@@ -38,6 +37,7 @@ class ChatBoxContainer extends React.PureComponent {
             DECOMPRESSING: "DECOMPRESSING",
         };
         this.downloadMessage = null;
+        this.messageBox = null;
         this.me = this.props.userInfo;
         this.collection = _.join(_.sortBy([this.me._id, this.props.match.params._id]), "-");
         this.socket = socketIOClient();
@@ -46,16 +46,21 @@ class ChatBoxContainer extends React.PureComponent {
 
     toggleEmojiTabShowFlag = (flag = !this.state.emojisTabShowFlag) => {
         if (!flag) {
-            $("#message-text").focus();
+            this.messageBox.focus();
         }
         this.setState({ emojisTabShowFlag: flag });
     }
 
     appendEmojiToText = (emoji) => {
-        let { text } = this.state;
-        if (text.length == 200) return;
-        const ind = $("#message-text").index();
-        this.setState({ text: text + emoji });
+        // need bug fix
+        this.messageBox.focus();
+        const selectionStart = this.messageBox.selectionStart;
+        const selectionEnd = this.messageBox.selectionEnd;
+        const arr = this.messageBox.value.split("");
+        const newArr = [];
+        arr.splice(selectionStart, 0, emoji);
+        this.messageBox.value = arr.join("");
+        this.messageBox.setSelectionRange(selectionStart + 1, selectionEnd + 1);
     }
 
     setupImgDownload = (message) => {
@@ -63,17 +68,29 @@ class ChatBoxContainer extends React.PureComponent {
         this.toggleDownloadModalShowFlag();
     }
 
+    getMessageDate(createdAt) {
+        const messageDate = moment(createdAt).format('MMMM Do YYYY');
+        if (this.lastMessageDate == messageDate) return;
+        this.lastMessageDate = messageDate;
+        return <div className="d-flex">
+            <div className="chatbox-message-date">{messageDate}</div>
+        </div>;
+    }
+
     getMessage = (message, key) => {
         const me = this.me || {};
-        return <div key={key} className="chatbox-message-box-outer">
-            <div className={`chatbox-message-box chatbox-message-align-${message.from._id == me._id ? 'right' : 'left'}`}>
-                <div className="chatbox-message-from">
-                    <b>{message.from._id == me._id ? 'You' : message.from.name}</b>
-                    <span className="chatbox-message-time">{moment(message.createdAt).format('h:mm a')}</span>
-                </div>
-                {message.type == 1 ? <span className="chatbox-message-link" onClick={() => this.setupImgDownload(message)}>{message.file.name}</span> :
-                    <span className="chatbox-message-text">{message.text}</span>}
-            </div >
+        return <div key={key}>
+            {this.getMessageDate(message.createdAt)}
+            <div className="d-flex">
+                <div className={`chatbox-message-box chatbox-message-align-${message.from._id == me._id ? 'right' : 'left'}`}>
+                    <div className="chatbox-message-from">
+                        <b>{message.from._id == me._id ? 'You' : message.from.name}</b>
+                        <span className="chatbox-message-time">{moment(message.createdAt).format('h:mm a')}</span>
+                    </div>
+                    {message.type == 1 ? <span className="chatbox-message-link" onClick={() => this.setupImgDownload(message)}>{message.file.name}</span> :
+                        <span className="chatbox-message-text">{message.text}</span>}
+                </div >
+            </div>
         </div>
     }
 
@@ -84,16 +101,9 @@ class ChatBoxContainer extends React.PureComponent {
         </div>;
     }
 
-    setText = (e) => {
-        let value = e.target.value;
-        if (value.length > 200) value = value.substr(0, 200);
-        this.setState({ text: value })
-    }
-
     pushMessage = (message) => {
         this.state.messages.push(message);
         const flag = message.from._id == this.me._id;
-        if (flag) this.state.text = '';
         this.forceUpdate(() => {
             if (flag) this.scrollToBottom();
         });
@@ -101,7 +111,7 @@ class ChatBoxContainer extends React.PureComponent {
 
     sendMessage = (e) => {
         e.preventDefault();
-        let text = this.state.text.trim();
+        let text = this.messageBox.value.trim();
         if (text.length == 0) return;
         Request.post(`/user/message/${this.collection}`, { text, type: 0 }).catch(error => toast.error(error.message));
     }
@@ -115,14 +125,11 @@ class ChatBoxContainer extends React.PureComponent {
     getFooter() {
         return <form onSubmit={this.sendMessage}>
             <div className="d-flex">
-                <button className="sg-btn-primary emoji-button" type="button"
-                    onClick={() => this.toggleEmojiTabShowFlag()}>😄</button>
+                {/* <button className="sg-btn-primary emoji-button" type="button"
+                    onClick={() => this.toggleEmojiTabShowFlag()}>😄</button> */}
                 <input id="message-text"
                     autoComplete="off"
-                    autoFocus={true}
-                    onChange={this.setText}
-                    // onFocus={() => this.toggleEmojiTabShowFlag(false)}
-                    value={this.state.text} />
+                    autoFocus={true} />
                 <button className="sg-btn-primary send-button"
                     onClick={this.toggleUploadModalShowFlag}
                     type="button"><FontAwesomeIcon icon="upload" /></button>
@@ -266,6 +273,7 @@ class ChatBoxContainer extends React.PureComponent {
     }
 
     render() {
+        this.lastMessageDate = null;
         return <div className={`chatbox`}>
             {this.getUploadModal()}
             {this.getDownloadModal()}
@@ -303,6 +311,7 @@ class ChatBoxContainer extends React.PureComponent {
     componentDidMount() {
         this.fetchMessages();
         this.socket.on(this.collection, this.pushMessage);
+        this.messageBox = document.getElementById("message-text");
     }
 }
 
